@@ -7,6 +7,7 @@ import com.cactus.desert.desertbackend.form.Form;
 import com.cactus.desert.desertbackend.repository.PlayerRepository;
 import com.cactus.desert.desertbackend.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Validator;
@@ -37,6 +38,12 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
+    public Optional<PlayerInfo> getPlayerByName(String playerName) {
+        return playerRepository.findByPlayerName(playerName)
+                .map(PlayerInfo::new);
+    }
+
+    @Override
     public List<PlayerInfo> getAllPlayers() {
         return playerRepository.findAll().stream()
                 .map(PlayerInfo::new)
@@ -59,6 +66,14 @@ public class PlayerServiceImpl implements PlayerService {
         }
         playerRepository.deleteById(playerId);
         return true;
+    }
+
+    @Override
+    public boolean loginPlayer(String playerName, String password) {
+        if (playerRepository.findByPlayerName(playerName).isPresent()) {
+            return BCrypt.checkpw(password, playerRepository.findByPlayerName(playerName).get().getPlayerPassword());
+        }
+        return false;
     }
 
     @Override

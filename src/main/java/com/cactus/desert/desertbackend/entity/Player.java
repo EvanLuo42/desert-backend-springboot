@@ -27,6 +27,9 @@ public class Player {
     @Column(name = "player_email", nullable = false, unique = true)
     private String playerEmail;
 
-    @Column(name = "salt", nullable = false)
-    private String salt;
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive;
+
+    @Column(name = "is_admin", nullable = false)
+    private boolean isAdmin;
 }

@@ -15,11 +15,15 @@ import java.util.Optional;
 public interface PlayerService {
     Optional<PlayerInfo> getPlayerById(Long playerId);
 
+    Optional<PlayerInfo> getPlayerByName(String playerName);
+
     List<PlayerInfo> getAllPlayers();
 
     boolean createPlayer(Player player);
 
     boolean deletePlayer(Long playerId);
+
+    boolean loginPlayer(String playerName, String password);
 
     List<FieldError> validateForm(Form form);
 }

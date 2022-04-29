@@ -2,10 +2,11 @@ package com.cactus.desert.desertbackend.controller;
 
 import com.cactus.desert.desertbackend.Result;
 import com.cactus.desert.desertbackend.dto.PlayerInfo;
+import com.cactus.desert.desertbackend.dto.TokenDetail;
 import com.cactus.desert.desertbackend.entity.Player;
 import com.cactus.desert.desertbackend.form.FieldError;
-import com.cactus.desert.desertbackend.form.Form;
 import com.cactus.desert.desertbackend.form.GetPlayerByIdForm;
+import com.cactus.desert.desertbackend.form.LoginForm;
 import com.cactus.desert.desertbackend.form.RegisterForm;
 import com.cactus.desert.desertbackend.service.PlayerService;
 import com.cactus.desert.desertbackend.util.I18nUtil;
@@ -69,17 +70,15 @@ public class PlayerController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 
-    @PostMapping(path = "/player")
+    @PostMapping(path = "/player/register")
     public ResponseEntity<Result> register(@RequestBody RegisterForm form) {
         List<FieldError> formValidate = playerService.validateForm(form);
         Result result = new Result();
         if (formValidate.isEmpty()) {
-            String salt = BCrypt.gensalt();
             Player player = new Player();
             player.setPlayerName(form.getPlayerName());
-            player.setPlayerPassword(BCrypt.hashpw(form.getPlayerPassword(), salt));
+            player.setPlayerPassword(BCrypt.hashpw(form.getPlayerPassword(), BCrypt.gensalt()));
             player.setPlayerEmail(form.getPlayerEmail());
-            player.setSalt(salt);
 
             if (!playerService.createPlayer(player)) {
                 result.setStatus(Result.Status.ERROR);
@@ -97,6 +96,43 @@ public class PlayerController {
         result.setStatus(Result.Status.ERROR);
         result.setMessage(I18nUtil.getMessage("common.invalidForm"));
         result.setData(null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
+    @PostMapping(path = "/player/login")
+    public ResponseEntity<Result> login(@RequestBody LoginForm form) {
+        List<FieldError> formValidate = playerService.validateForm(form);
+        Result result = new Result();
+
+        if (formValidate.isEmpty()) {
+            if (playerService.loginPlayer(form.getPlayerName(), form.getPlayerPassword())) {
+                TokenDetail tokenDetail = new TokenDetail();
+                Optional<PlayerInfo> playerInfo = playerService.getPlayerByName(form.getPlayerName());
+                if (playerInfo.map(PlayerInfo::isActive).orElse(false)) {
+                    tokenDetail.setPlayerName(playerInfo.map(PlayerInfo::getPlayerName).orElse(null));
+                    tokenDetail.setAdmin(playerInfo.map(PlayerInfo::isAdmin).orElse(false));
+
+                    result.setStatus(Result.Status.SUCCESS);
+                    result.setMessage(I18nUtil.getMessage("player.loginPlayerSuccess"));
+                    result.setData(tokenDetail);
+                    return ResponseEntity.ok().body(result);
+                }
+
+                result.setStatus(Result.Status.ERROR);
+                result.setMessage(I18nUtil.getMessage("player.playerIsBanned"));
+                result.setData(null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+            }
+
+            result.setStatus(Result.Status.ERROR);
+            result.setMessage(I18nUtil.getMessage("player.playerNamePasswordWrong"));
+            result.setData(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+
+        result.setStatus(Result.Status.ERROR);
+        result.setMessage(I18nUtil.getMessage("common.invalidForm"));
+        result.setData(result);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 }

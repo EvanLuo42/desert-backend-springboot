@@ -12,12 +12,14 @@ public class PlayerInfo {
     private Long playerId;
     private String playerName;
     private String playerEmail;
-    private String salt;
+    private boolean isAdmin;
+    private boolean isActive;
 
     public PlayerInfo(Player player) {
         this.playerId = player.getPlayerId();
         this.playerName = player.getPlayerName();
         this.playerEmail = player.getPlayerEmail();
-        this.salt = player.getSalt();
+        this.isAdmin = player.isAdmin();
+        this.isActive = player.isActive();
     }
 }
