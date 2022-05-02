@@ -10,8 +10,8 @@ import com.cactus.desert.desertbackend.form.LoginForm;
 import com.cactus.desert.desertbackend.form.RegisterForm;
 import com.cactus.desert.desertbackend.service.PlayerService;
 import com.cactus.desert.desertbackend.util.I18nUtil;
+import com.cactus.desert.desertbackend.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
@@ -27,20 +27,19 @@ import java.util.Optional;
 public class PlayerController {
     private final PlayerService playerService;
     private final I18nUtil i18nUtil;
+    private final TokenUtil tokenUtil;
 
     @Autowired
-    public PlayerController(PlayerService playerService, I18nUtil i18nUtil) {
+    public PlayerController(PlayerService playerService, I18nUtil i18nUtil, TokenUtil tokenUtil) {
         this.playerService = playerService;
         this.i18nUtil = i18nUtil;
+        this.tokenUtil = tokenUtil;
     }
 
     @GetMapping(path = "/players")
     public ResponseEntity<Result> getAllPlayer() {
         Result result = new Result();
-        result.setStatus(Result.Status.SUCCESS);
-        result.setMessage(i18nUtil.getMessage("player.getAllSuccess"));
-        result.setData(playerService.getAllPlayers());
-        return ResponseEntity.ok().body(result);
+        return result.success(i18nUtil.getMessage("player.getAllSuccess"), playerService.getAllPlayers());
     }
 
     @GetMapping(path = "/player/{playerId}/friends")
@@ -50,47 +49,26 @@ public class PlayerController {
         Optional<List<PlayerInfo>> friends = playerService.getAllPlayerFriends(playerId);
 
         return friends
-                .map(playerInfo -> {
-                    result.setStatus(Result.Status.SUCCESS);
-                    result.setMessage(i18nUtil.getMessage("player.getFriendsSuccess"));
-                    result.setData(friends);
-                    return ResponseEntity.ok().body(result);
-                })
-                .orElseGet(() -> {
-                    result.setStatus(Result.Status.ERROR);
-                    result.setMessage(i18nUtil.getMessage("player.notFound"));
-                    result.setData(null);
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-                });
+                .map(friend -> result.success(i18nUtil.getMessage("player.getFriendsSuccess"), friend))
+                .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
     }
 
     @GetMapping(path = "/player/{playerId}")
     public ResponseEntity<Result> getPlayerById(@PathVariable Long playerId) {
         GetPlayerByIdForm form = new GetPlayerByIdForm();
         form.setPlayerId(playerId);
+        List<FieldError> formValidate = playerService.validateForm(form);
         Result result = new Result();
 
-        if (playerService.validateForm(form).isEmpty()) {
+        if (formValidate.isEmpty()) {
             Optional<PlayerInfo> playerInfo = playerService.getPlayerById(playerId);
             return playerInfo
-                    .map(info -> {
-                        result.setStatus(Result.Status.SUCCESS);
-                        result.setMessage(i18nUtil.getMessage("player.getSuccess"));
-                        result.setData(playerService.getAllPlayers());
-                        return ResponseEntity.ok().body(result);
-                    })
-                    .orElseGet(() -> {
-                        result.setStatus(Result.Status.ERROR);
-                        result.setMessage(i18nUtil.getMessage("player.notFound"));
-                        result.setData(null);
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-                    });
+                    .map(info -> result.success(i18nUtil.getMessage("player.getByIdSuccess"), info))
+                    .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
         }
 
-        result.setStatus(Result.Status.ERROR);
-        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
-        result.setData(playerService.validateForm(form));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        return result.formError(i18nUtil.getMessage("common.invalidForm"),
+                formValidate);
     }
 
     @PostMapping(path = "/player/register")
@@ -104,22 +82,13 @@ public class PlayerController {
             player.setPlayerEmail(form.getPlayerEmail());
 
             if (!playerService.createPlayer(player)) {
-                result.setStatus(Result.Status.ERROR);
-                result.setMessage(i18nUtil.getMessage("player.exist"));
-                result.setData(null);
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                return result.conflict(i18nUtil.getMessage("player.exist"));
             }
 
-            result.setStatus(Result.Status.SUCCESS);
-            result.setMessage(i18nUtil.getMessage("player.registerSuccess"));
-            result.setData(Optional.of(player).map(PlayerInfo::new).get());
-            return ResponseEntity.ok().body(result);
+            return result.success(i18nUtil.getMessage("player.registerSuccess"),
+                    Optional.of(player).map(PlayerInfo::new).get());
         }
-
-        result.setStatus(Result.Status.ERROR);
-        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
-        result.setData(null);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        return result.formError(i18nUtil.getMessage("common.invalidForm"), formValidate);
     }
 
     @PostMapping(path = "/player/login")
@@ -129,33 +98,22 @@ public class PlayerController {
 
         if (formValidate.isEmpty()) {
             if (playerService.loginPlayer(form.getPlayerName(), form.getPlayerPassword())) {
-                TokenDetail tokenDetail = new TokenDetail();
                 Optional<PlayerInfo> playerInfo = playerService.getPlayerByName(form.getPlayerName());
                 if (playerInfo.map(PlayerInfo::isActive).orElse(false)) {
+                    TokenDetail tokenDetail = new TokenDetail();
                     tokenDetail.setPlayerName(playerInfo.map(PlayerInfo::getPlayerName).orElse(null));
                     tokenDetail.setAdmin(playerInfo.map(PlayerInfo::isAdmin).orElse(false));
+                    String token = tokenUtil.generateToken(tokenDetail);
 
-                    result.setStatus(Result.Status.SUCCESS);
-                    result.setMessage(i18nUtil.getMessage("player.loginSuccess"));
-                    result.setData(tokenDetail);
-                    return ResponseEntity.ok().body(result);
+                    return result.success(i18nUtil.getMessage("player.loginSuccess"), token);
                 }
 
-                result.setStatus(Result.Status.ERROR);
-                result.setMessage(i18nUtil.getMessage("player.banned"));
-                result.setData(null);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+                return result.unAuthorized(i18nUtil.getMessage("player.banned"));
             }
 
-            result.setStatus(Result.Status.ERROR);
-            result.setMessage(i18nUtil.getMessage("player.nameOrPasswordWrong"));
-            result.setData(null);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+            return result.unAuthorized(i18nUtil.getMessage("player.nameOrPasswordWrong"));
         }
 
-        result.setStatus(Result.Status.ERROR);
-        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
-        result.setData(result);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        return result.formError(i18nUtil.getMessage("common.invalidForm"), formValidate);
     }
 }

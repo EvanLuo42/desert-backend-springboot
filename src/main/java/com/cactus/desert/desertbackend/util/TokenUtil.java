@@ -4,9 +4,8 @@ import com.cactus.desert.desertbackend.dto.TokenDetail;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -17,39 +16,40 @@ import java.util.Map;
  * @author EvanLuo42
  * @date 4/29/22 8:34 AM
  */
+@Component
 public class TokenUtil {
 
     @Value("${token.secret}")
-    private static String secret;
+    private String secret;
 
     @Value("${token.expiration}")
-    private static Long expiration;
+    private Long expiration;
 
-    public static String generateToken(TokenDetail tokenDetail) {
+    public String generateToken(TokenDetail tokenDetail) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("playerName", tokenDetail.getPlayerName());
         claims.put("role", tokenDetail.isAdmin());
-        claims.put("created", TokenUtil.generateCurrentDate());
-        return TokenUtil.generateToken(claims);
+        claims.put("created", this.generateCurrentDate());
+        return this.generateToken(claims);
     }
 
-    private static String generateToken(Map<String, Object> claims) {
+    private String generateToken(Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setExpiration(TokenUtil.generateExpirationDate())
+                .setExpiration(this.generateExpirationDate())
                 .signWith(SignatureAlgorithm.HS512, secret.getBytes(StandardCharsets.UTF_8))
                 .compact();
     }
 
-    private static Date generateExpirationDate() {
+    private Date generateExpirationDate() {
         return new Date(System.currentTimeMillis() + expiration);
     }
 
-    private static Date generateCurrentDate() {
+    private Date generateCurrentDate() {
         return new Date(System.currentTimeMillis());
     }
 
-    public static String getPlayerNameFromToken(String token) {
+    public String getPlayerNameFromToken(String token) {
         String username;
         try {
             final Claims claims = getClaimsFromToken(token);
@@ -60,7 +60,7 @@ public class TokenUtil {
         return username;
     }
 
-    public static String getRoleFromToken(String token) {
+    public String getRoleFromToken(String token) {
         String role;
         try {
             final Claims claims = getClaimsFromToken(token);
@@ -71,7 +71,7 @@ public class TokenUtil {
         return role;
     }
 
-    private static Claims getClaimsFromToken(String token) {
+    private Claims getClaimsFromToken(String token) {
         Claims claims;
         try {
             claims = Jwts.parser()
