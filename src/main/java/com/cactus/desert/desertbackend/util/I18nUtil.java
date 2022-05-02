@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
@@ -11,18 +12,19 @@ import java.util.Locale;
  * @author EvanLuo42
  * @date 4/28/22 5:29 PM
  */
+@Component
 public class I18nUtil {
-    private static final Logger logger = LoggerFactory.getLogger(I18nUtil.class);
+    private final Logger logger = LoggerFactory.getLogger(I18nUtil.class);
 
-    public static String getMessage(String code) {
+    public String getMessage(String code) {
         return getMessage(code, null);
     }
 
-    public static String getMessage(String code, Object[] args) {
+    public String getMessage(String code, Object[] args) {
         return getMessage(code, args, "");
     }
 
-    public static String getMessage(String code, Object[] args, String defaultMessage) {
+    public String getMessage(String code, Object[] args, String defaultMessage) {
 
         Locale locale = LocaleContextHolder.getLocale();
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();

@@ -17,6 +17,8 @@ public interface PlayerService {
 
     Optional<PlayerInfo> getPlayerByName(String playerName);
 
+    Optional<List<PlayerInfo>> getAllPlayerFriends(Long playerId);
+
     List<PlayerInfo> getAllPlayers();
 
     boolean createPlayer(Player player);

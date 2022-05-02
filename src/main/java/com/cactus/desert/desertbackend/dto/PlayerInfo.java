@@ -15,7 +15,6 @@ public class PlayerInfo {
     private Long playerId;
     private String playerName;
     private String playerEmail;
-    private List<PlayerInfo> friends;
     private boolean isAdmin;
     private boolean isActive;
 
@@ -23,7 +22,6 @@ public class PlayerInfo {
         this.playerId = player.getPlayerId();
         this.playerName = player.getPlayerName();
         this.playerEmail = player.getPlayerEmail();
-        this.friends = player.getFriends().stream().map(PlayerInfo::new).collect(Collectors.toList());
         this.isAdmin = player.isAdmin();
         this.isActive = player.isActive();
     }

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = "com.cactus.desert.desertbackend.entity")
 @ComponentScan(basePackages = "com.cactus.desert.desertbackend.service")
 @ComponentScan(basePackages = "com.cactus.desert.desertbackend.controller")
+@ComponentScan(basePackages = "com.cactus.desert.desertbackend.util")
 @EnableJpaRepositories(basePackages = "com.cactus.desert.desertbackend.repository")
 @ConfigurationPropertiesScan(basePackages = "com.cactus.desert.desertbackend.config")
 public class DesertBackendApplication {

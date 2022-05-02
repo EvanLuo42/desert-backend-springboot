@@ -44,6 +44,12 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
+    public Optional<List<PlayerInfo>> getAllPlayerFriends(Long playerId) {
+        return playerRepository.findById(playerId)
+                .map(player -> player.getFriends().stream().map(PlayerInfo::new).collect(Collectors.toList()));
+    }
+
+    @Override
     public List<PlayerInfo> getAllPlayers() {
         return playerRepository.findAll().stream()
                 .map(PlayerInfo::new)

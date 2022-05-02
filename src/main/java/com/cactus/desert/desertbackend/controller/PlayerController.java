@@ -26,17 +26,19 @@ import java.util.Optional;
 @RestController
 public class PlayerController {
     private final PlayerService playerService;
+    private final I18nUtil i18nUtil;
 
     @Autowired
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, I18nUtil i18nUtil) {
         this.playerService = playerService;
+        this.i18nUtil = i18nUtil;
     }
 
     @GetMapping(path = "/players")
     public ResponseEntity<Result> getAllPlayer() {
         Result result = new Result();
         result.setStatus(Result.Status.SUCCESS);
-        result.setMessage(I18nUtil.getMessage("player.getAllSuccess"));
+        result.setMessage(i18nUtil.getMessage("player.getAllSuccess"));
         result.setData(playerService.getAllPlayers());
         return ResponseEntity.ok().body(result);
     }
@@ -45,18 +47,18 @@ public class PlayerController {
     public ResponseEntity<Result> getPlayerFriends(@PathVariable Long playerId) {
         Result result = new Result();
 
-        Optional<PlayerInfo> friends = playerService.getPlayerById(playerId);
+        Optional<List<PlayerInfo>> friends = playerService.getAllPlayerFriends(playerId);
 
         return friends
                 .map(playerInfo -> {
                     result.setStatus(Result.Status.SUCCESS);
-                    result.setMessage(I18nUtil.getMessage("player.getFriendsSuccess"));
-                    result.setData(playerInfo.getFriends());
+                    result.setMessage(i18nUtil.getMessage("player.getFriendsSuccess"));
+                    result.setData(friends);
                     return ResponseEntity.ok().body(result);
                 })
                 .orElseGet(() -> {
                     result.setStatus(Result.Status.ERROR);
-                    result.setMessage(I18nUtil.getMessage("player.notFound"));
+                    result.setMessage(i18nUtil.getMessage("player.notFound"));
                     result.setData(null);
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
                 });
@@ -73,20 +75,20 @@ public class PlayerController {
             return playerInfo
                     .map(info -> {
                         result.setStatus(Result.Status.SUCCESS);
-                        result.setMessage(I18nUtil.getMessage("player.getSuccess"));
+                        result.setMessage(i18nUtil.getMessage("player.getSuccess"));
                         result.setData(playerService.getAllPlayers());
                         return ResponseEntity.ok().body(result);
                     })
                     .orElseGet(() -> {
                         result.setStatus(Result.Status.ERROR);
-                        result.setMessage(I18nUtil.getMessage("player.notFound"));
+                        result.setMessage(i18nUtil.getMessage("player.notFound"));
                         result.setData(null);
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
                     });
         }
 
         result.setStatus(Result.Status.ERROR);
-        result.setMessage(I18nUtil.getMessage("common.invalidForm"));
+        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
         result.setData(playerService.validateForm(form));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
@@ -103,19 +105,19 @@ public class PlayerController {
 
             if (!playerService.createPlayer(player)) {
                 result.setStatus(Result.Status.ERROR);
-                result.setMessage(I18nUtil.getMessage("player.exist"));
+                result.setMessage(i18nUtil.getMessage("player.exist"));
                 result.setData(null);
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
 
             result.setStatus(Result.Status.SUCCESS);
-            result.setMessage(I18nUtil.getMessage("player.registerSuccess"));
+            result.setMessage(i18nUtil.getMessage("player.registerSuccess"));
             result.setData(Optional.of(player).map(PlayerInfo::new).get());
             return ResponseEntity.ok().body(result);
         }
 
         result.setStatus(Result.Status.ERROR);
-        result.setMessage(I18nUtil.getMessage("common.invalidForm"));
+        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
         result.setData(null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
@@ -134,25 +136,25 @@ public class PlayerController {
                     tokenDetail.setAdmin(playerInfo.map(PlayerInfo::isAdmin).orElse(false));
 
                     result.setStatus(Result.Status.SUCCESS);
-                    result.setMessage(I18nUtil.getMessage("player.loginSuccess"));
+                    result.setMessage(i18nUtil.getMessage("player.loginSuccess"));
                     result.setData(tokenDetail);
                     return ResponseEntity.ok().body(result);
                 }
 
                 result.setStatus(Result.Status.ERROR);
-                result.setMessage(I18nUtil.getMessage("player.banned"));
+                result.setMessage(i18nUtil.getMessage("player.banned"));
                 result.setData(null);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
             }
 
             result.setStatus(Result.Status.ERROR);
-            result.setMessage(I18nUtil.getMessage("player.nameOrPasswordWrong"));
+            result.setMessage(i18nUtil.getMessage("player.nameOrPasswordWrong"));
             result.setData(null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
         }
 
         result.setStatus(Result.Status.ERROR);
-        result.setMessage(I18nUtil.getMessage("common.invalidForm"));
+        result.setMessage(i18nUtil.getMessage("common.invalidForm"));
         result.setData(result);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
