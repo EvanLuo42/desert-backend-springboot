@@ -58,7 +58,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public boolean createPlayer(Player player) {
-        if (playerRepository.findById(player.getPlayerId()).isEmpty()) {
+        if (playerRepository.findByPlayerName(player.getPlayerName()).isEmpty()) {
             playerRepository.save(player);
             return true;
         }

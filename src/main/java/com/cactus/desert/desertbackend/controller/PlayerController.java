@@ -39,16 +39,15 @@ public class PlayerController {
     @GetMapping(path = "/players")
     public ResponseEntity<Result> getAllPlayer() {
         Result result = new Result();
-        return result.success(i18nUtil.getMessage("player.getAllSuccess"), playerService.getAllPlayers());
+        return result.success(i18nUtil.getMessage("player.getAllSuccess"),
+                playerService.getAllPlayers());
     }
 
     @GetMapping(path = "/player/{playerId}/friends")
     public ResponseEntity<Result> getPlayerFriends(@PathVariable Long playerId) {
         Result result = new Result();
 
-        Optional<List<PlayerInfo>> friends = playerService.getAllPlayerFriends(playerId);
-
-        return friends
+        return playerService.getAllPlayerFriends(playerId)
                 .map(friend -> result.success(i18nUtil.getMessage("player.getFriendsSuccess"), friend))
                 .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
     }
@@ -61,8 +60,7 @@ public class PlayerController {
         Result result = new Result();
 
         if (formValidate.isEmpty()) {
-            Optional<PlayerInfo> playerInfo = playerService.getPlayerById(playerId);
-            return playerInfo
+            return playerService.getPlayerById(playerId)
                     .map(info -> result.success(i18nUtil.getMessage("player.getByIdSuccess"), info))
                     .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
         }
