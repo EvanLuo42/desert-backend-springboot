@@ -78,6 +78,8 @@ public class PlayerController {
             player.setPlayerName(form.getPlayerName());
             player.setPlayerPassword(BCrypt.hashpw(form.getPlayerPassword(), BCrypt.gensalt()));
             player.setPlayerEmail(form.getPlayerEmail());
+            player.setActive(true);
+            player.setAdmin(false);
 
             if (!playerService.createPlayer(player)) {
                 return result.conflict(i18nUtil.getMessage("player.exist"));
