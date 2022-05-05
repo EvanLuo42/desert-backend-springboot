@@ -4,6 +4,8 @@ import com.cactus.desert.desertbackend.dto.TokenDetail;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author EvanLuo42
@@ -18,6 +21,8 @@ import java.util.Map;
  */
 @Component
 public class TokenUtil {
+
+    private final Logger logger = LoggerFactory.getLogger(TokenUtil.class);
 
     @Value("${token.secret}")
     private String secret;
@@ -34,6 +39,7 @@ public class TokenUtil {
     }
 
     private String generateToken(Map<String, Object> claims) {
+        logger.debug("Generated token for {}", claims.get("playerName"));
         return Jwts.builder()
                 .setClaims(claims)
                 .setExpiration(this.generateExpirationDate())
@@ -49,15 +55,17 @@ public class TokenUtil {
         return new Date(System.currentTimeMillis());
     }
 
-    public String getPlayerNameFromToken(String token) {
+    public Optional<String> getPlayerNameFromToken(String token) {
         String username;
         try {
             final Claims claims = getClaimsFromToken(token);
             username = (String) claims.get("playerName");
+            logger.debug("Get playerName successfully.");
         } catch (Exception e) {
             username = null;
+            logger.error(e.getMessage());
         }
-        return username;
+        return Optional.ofNullable(username);
     }
 
     public String getRoleFromToken(String token) {

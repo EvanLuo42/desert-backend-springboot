@@ -13,10 +13,10 @@ import javax.validation.constraints.Size;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class LoginForm extends Form {
-    @NotNull(message = "Player name could not be empty.")
-    @Size(min = 3, max = 20, message = "Player name need to be between 3 and 20 characters.")
+    @NotNull(message = "form.player.name.required")
+    @Size(min = 3, max = 20, message = "form.player.name.length")
     private String playerName;
 
-    @NotNull(message = "Password could not be empty.")
+    @NotNull(message = "form.player.password.required")
     private String playerPassword;
 }

@@ -17,7 +17,11 @@ public interface PlayerService {
 
     Optional<PlayerInfo> getPlayerByName(String playerName);
 
-    Optional<List<PlayerInfo>> getAllPlayerFriends(Long playerId);
+    List<PlayerInfo> getAllPlayerFriends(Long playerId);
+
+    boolean addFriend(Long friendId, String playerName);
+
+    boolean removeFriend(Long friendId, String playerName);
 
     List<PlayerInfo> getAllPlayers();
 
@@ -25,7 +29,7 @@ public interface PlayerService {
 
     boolean deletePlayer(Long playerId);
 
-    boolean loginPlayer(String playerName, String password);
+    boolean validateLogin(String playerName, String password);
 
     List<FieldError> validateForm(Form form);
 }

@@ -7,11 +7,11 @@ import javax.validation.constraints.NotNull;
 
 /**
  * @author EvanLuo42
- * @date 4/28/22 4:42 PM
+ * @date 5/3/22 10:53 AM
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class GetPlayerByIdForm extends Form {
-    @NotNull(message = "form.player.name.required")
-    private Long playerId;
+public class AddFriendForm extends Form {
+    @NotNull
+    private Long friendId;
 }

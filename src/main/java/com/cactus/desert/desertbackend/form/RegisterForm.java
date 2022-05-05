@@ -16,7 +16,6 @@ import javax.validation.constraints.Size;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Component
 public class RegisterForm extends Form {
     @NotNull(message = "form.player.name.required")
     @Size(min = 3, max = 20, message = "form.player.name.length")

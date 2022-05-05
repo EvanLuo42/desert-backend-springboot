@@ -28,9 +28,6 @@ public class Player {
     @Column(name = "player_email", nullable = false, unique = true)
     private String playerEmail;
 
-    @OneToMany(mappedBy = "friends", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Player> friends;
-
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 

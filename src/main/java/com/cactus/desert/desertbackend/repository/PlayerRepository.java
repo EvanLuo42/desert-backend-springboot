@@ -12,4 +12,5 @@ import java.util.Optional;
  */
 public interface PlayerRepository extends JpaRepository<Player, Long>, JpaSpecificationExecutor<Player> {
     Optional<Player> findByPlayerName(String playerName);
+    Optional<Player> findByPlayerId(Long playerId);
 }

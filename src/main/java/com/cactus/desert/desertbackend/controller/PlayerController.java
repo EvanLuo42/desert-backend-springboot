@@ -42,13 +42,59 @@ public class PlayerController {
     public ResponseEntity<Result> getPlayerFriends(@PathVariable Long playerId) {
         Result result = new Result();
 
-        return playerService.getAllPlayerFriends(playerId)
-                .map(friend -> result.success(i18nUtil.getMessage("player.getFriendsSuccess"), friend))
-                .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
+        return result.success(i18nUtil.getMessage("player.getFriendsSuccess"), playerService.getAllPlayerFriends(playerId));
+    }
+
+    @PostMapping(path = "/player/friend/{friendId}")
+    public ResponseEntity<Result> addFriend(@PathVariable Long friendId, @RequestHeader(name = "Authorization") String token) {
+        Result result = new Result();
+        Optional<String> playerName = tokenUtil.getPlayerNameFromToken(token);
+
+        if (playerName.isEmpty()) {
+            return result.unAuthorized(i18nUtil.getMessage("common.unauthorized"));
+        }
+
+        AddFriendForm form = new AddFriendForm();
+        form.setFriendId(friendId);
+        List<FieldError> formValidate = playerService.validateForm(form);
+
+        if (!formValidate.isEmpty()) {
+            return result.formError(i18nUtil.getMessage("common.invalidForm"), formValidate);
+        }
+
+        if (!playerService.addFriend(friendId, playerName.get())) {
+            return result.notFound(i18nUtil.getMessage("player.addFriendFailed"));
+        }
+
+        return result.success(i18nUtil.getMessage("player.addFriendSuccess"), null);
+    }
+
+    @DeleteMapping(path = "/player/friend/{friendId}")
+    public ResponseEntity<Result> removeFriend(@PathVariable Long friendId, @RequestHeader(name = "Authorization") String token) {
+        Result result = new Result();
+        Optional<String> playerName = tokenUtil.getPlayerNameFromToken(token);
+
+        if (playerName.isEmpty()) {
+            return result.unAuthorized(i18nUtil.getMessage("common.unauthorized"));
+        }
+
+        AddFriendForm form = new AddFriendForm();
+        form.setFriendId(friendId);
+        List<FieldError> formValidate = playerService.validateForm(form);
+
+        if (!formValidate.isEmpty()) {
+            return result.formError(i18nUtil.getMessage("common.invalidForm"), formValidate);
+        }
+
+        if (!playerService.removeFriend(friendId, playerName.get())) {
+            return result.notFound(i18nUtil.getMessage("player.removeFriendFailed"));
+        }
+
+        return result.success(i18nUtil.getMessage("player.removeFriendSuccess"), null);
     }
 
     @GetMapping(path = "/player/{playerId}")
-    public ResponseEntity<Result> getPlayerById(@PathVariable Long playerId) {
+    public ResponseEntity<Result> getPlayerByName(@PathVariable Long playerId) {
         GetPlayerByIdForm form = new GetPlayerByIdForm();
         form.setPlayerId(playerId);
         List<FieldError> formValidate = playerService.validateForm(form);
@@ -61,7 +107,7 @@ public class PlayerController {
 
         return playerService.getPlayerById(playerId)
                 .map(info -> result.success(i18nUtil.getMessage("player.getByIdSuccess"), info))
-                .orElse(result.notFound(i18nUtil.getMessage("player.notFound")));
+                .orElseGet(() -> result.notFound(i18nUtil.getMessage("player.notFound")));
     }
 
     @PostMapping(path = "/player/register")
@@ -96,7 +142,7 @@ public class PlayerController {
             return result.formError(i18nUtil.getMessage("common.invalidForm"), formValidate);
         }
 
-        if (!playerService.loginPlayer(form.getPlayerName(), form.getPlayerPassword())) {
+        if (!playerService.validateLogin(form.getPlayerName(), form.getPlayerPassword())) {
             return result.unAuthorized(i18nUtil.getMessage("player.nameOrPasswordWrong"));
         }
 
